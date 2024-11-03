@@ -12,7 +12,6 @@ on:
 jobs:
   create_tag:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     steps:
       - name: Check out code
         uses: actions/checkout@v4
