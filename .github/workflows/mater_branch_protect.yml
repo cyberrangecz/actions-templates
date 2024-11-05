@@ -1,3 +1,5 @@
+name: Run master protection check
+
 on:
   schedule:
     - cron: '0 0 * * *'  # Runs daily at midnight UTC
