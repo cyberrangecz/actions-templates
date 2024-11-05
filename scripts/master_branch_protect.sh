@@ -2,7 +2,6 @@
 
 # Replace these values with your organization name and personal access token
 ORG="cyberrangecz"               # Your GitHub organization name
-TOKEN=$GITHUB_TOKEN              # Your GitHub Personal Access Token
 BRANCH="master"                  # Branch name to protect (e.g., "main" or "master")
 
 # Define the branch protection settings
@@ -22,7 +21,6 @@ repos=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/orgs/$O
 # Loop through each repository and apply branch protection
 for repo in $repos; do
     echo "Setting branch protection on $ORG/$repo/$BRANCH"
-    echo $GITHUB_TOKEN
 
     # Apply the protection settings to the specified branch
     response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \

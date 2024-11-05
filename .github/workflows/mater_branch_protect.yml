@@ -5,6 +5,9 @@ on:
     - cron: '0 0 * * *'  # Runs daily at midnight UTC
   workflow_dispatch:  # Allows manual triggering
 
+permissions:
+  contents: write
+
 jobs:
   run_master_protection_config:
     runs-on: ubuntu-latest
@@ -13,8 +16,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
+      - name: Make script executable
+        run: chmod +x ./scripts/master_branch_protect.sh
+
       - name: Run master protection config
-        run: |
-          bash ./scripts/master_branch_protect.sh
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOKEN: ${{ secrets.ALL_REPOS_ACCESS_TOKEN }} # secrets.GITHUB_TOKEN is only available inside repo where aciton is running.
+        run: |
+          ./scripts/master_branch_protect.sh
