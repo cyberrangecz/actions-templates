@@ -13,6 +13,6 @@ jobs:
 
       - name: Run master protection config
         run: |
-          ./scripts/master_branch_protect.sh
+          bash ./scripts/master_branch_protect.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
