@@ -22,6 +22,7 @@ repos=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/orgs/$O
 # Loop through each repository and apply branch protection
 for repo in $repos; do
     echo "Setting branch protection on $ORG/$repo/$BRANCH"
+    echo $GITHUB_TOKEN
 
     # Apply the protection settings to the specified branch
     response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
