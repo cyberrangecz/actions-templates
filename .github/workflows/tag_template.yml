@@ -54,6 +54,9 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
       - name: Push the new tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
