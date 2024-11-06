@@ -48,6 +48,8 @@ jobs:
             exit 1
           fi
 
+          echo "New tag $NEW_TAG is valid, higher than, and not equal to last tag $LAST_TAG."
+
   push_tag:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
