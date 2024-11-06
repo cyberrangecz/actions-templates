@@ -11,6 +11,7 @@ on:
 
 jobs:
   create_tag:
+    if: github.event.pull_request.base.ref == 'master'
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -29,7 +30,7 @@ jobs:
         run: |
           # Convert VERSION_1 and VERSION_2 to positional variables
           new_tag=${{ inputs.VERSION }}
-          last_tag=${{ env.LATEST_SEMVER_TAG || '0.0.0' }}
+          last_tag=${{ env.latest_tag || '0.0.0' }}
 
           # Compare versions
           compare_versions() {
@@ -39,6 +40,10 @@ jobs:
             fi
           }
 
+  push_tag:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
       - name: Push the new tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
