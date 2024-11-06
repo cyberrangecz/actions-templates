@@ -43,7 +43,7 @@ jobs:
           fi
 
           # Compare versions
-          if [[ "$(echo -e "$NEW_TAG_NO_V\n$LAST_TAG_NO_V" | sort -V | head -n1)" != "$LAST_TAG_NO_V" ]]; then
+          if [[ "$(echo -e "$NEW_TAG_NO_V\n$LAST_TAG_NO_V" | sort -V | head -n1)" != "$LAST_TAG_NO_V" || "$NEW_TAG_NO_V" == "$LAST_TAG_NO_V" ]]; then
             echo "Error: New tag $NEW_TAG is not higher than last tag $LAST_TAG!"
             exit 1
           fi
