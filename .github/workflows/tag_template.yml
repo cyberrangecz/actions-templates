@@ -10,7 +10,7 @@ on:
         default: "1.0.0"
 
 jobs:
-  create_tag:
+  tag_control:
     if: github.event.pull_request.base.ref == 'master'
     runs-on: ubuntu-latest
     steps:
