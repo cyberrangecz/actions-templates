@@ -11,7 +11,7 @@ BRANCH_SETTINGS='{
 # Fetch all repositories in the organization
 repos=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/orgs/$ORG/repos?per_page=100" | jq -r '.[].name')
 
-# Loop through each repository and apply branch protection
+# Loop through each repository
 for repo in $repos; do
     echo "Setting Automatically delete head branches at $ORG/$repo"
 
@@ -23,8 +23,8 @@ for repo in $repos; do
         -d "$BRANCH_SETTINGS")
 
     if [ "$response" -eq 200 ]; then
-        echo "Branch protection applied to $repo successfully."
+        echo "Automatically delete head branches applied to $repo successfully."
     else
-        echo "Failed to apply branch protection to $repo (HTTP status: $response)."
+        echo "Failed to apply automatically delete head branches to $repo (HTTP status: $response)."
     fi
 done

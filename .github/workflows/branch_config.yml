@@ -8,6 +8,12 @@ on:
 jobs:
   run_master_protection_config:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        script:
+          - ./scripts/master_branch_protect.sh
+          - ./scripts/develop_branch_protect.sh
+          - ./scripts/delete_fature_branch.sh
 
     steps:
       - name: Check out code
@@ -20,6 +26,4 @@ jobs:
         env:
           TOKEN: ${{ secrets.ALL_REPOS_ACCESS_TOKEN }} # secrets.GITHUB_TOKEN is only available inside repo where aciton is running.
         run: |
-          ./scripts/master_branch_protect.sh && \
-          ./scripts/develop_branch_protect.sh && \
-          ./scripts/delete_fature_branch.sh
+          ${{ matrix.script }}
