@@ -6,14 +6,14 @@ on:
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  run_master_protection_config:
+  run_branch_config:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         script:
           - ./scripts/master_branch_protect.sh
           - ./scripts/develop_branch_protect.sh
-          - ./scripts/delete_fature_branch.sh
+          - ./scripts/delete_feature_branch.sh
 
     steps:
       - name: Check out code
