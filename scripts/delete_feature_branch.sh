@@ -16,7 +16,7 @@ for repo in $repos; do
     echo "Setting Automatically delete head branches at $ORG/$repo"
 
     # Apply the protection settings to the specified branch
-    response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+    response=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH \
         -H "Authorization: token $TOKEN" \
         -H "Accept: application/vnd.github.v3+json" \
         "https://api.github.com/repos/$ORG/$repo" \
