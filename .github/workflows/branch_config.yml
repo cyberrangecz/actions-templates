@@ -13,7 +13,7 @@ jobs:
         script:
           - ./scripts/master_branch_protect.sh
           - ./scripts/develop_branch_protect.sh
-          - ./scripts/delete_fature_branch.sh
+          - ./scripts/delete_feature_branch.sh
 
     steps:
       - name: Check out code
