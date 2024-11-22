@@ -57,7 +57,7 @@ jobs:
           build-args: |
             PROPRIETARY_REPO_URL=${{ vars.PROPRIETARY_REPO_URL }}
           push: true
-          tags: ghcr.io/${{ github.repository }}/${{ env.CI_CUSTOM_IMAGE_NAME }}:${{ env.VERSION }}
+          tags: ghcr.io/${{ github.repository }}/${{ env.CI_CUSTOM_IMAGE_NAME }}:${{ vars.VERSION }}
 
   generate_docs:
     if: github.ref == 'refs/heads/master'
