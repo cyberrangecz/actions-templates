@@ -1,7 +1,5 @@
 name: Java template
 
-# todo not do docker build if there is no tag
-
 on:
   workflow_call:
     inputs:
