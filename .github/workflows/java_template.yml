@@ -48,6 +48,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Set VERSION variable
+      id: set_version
+      run: |
+        # Default version if VERSION.txt doesn't exist or is empty
+        DEFAULT_VERSION="0.0.0"
+        
+        # Check if vars.VERSION is set
+        if [ -n "${{ vars.VERSION }}" ]; then
+          echo "VERSION=${{ vars.VERSION }}" >> $GITHUB_ENV
+        elif [ -f VERSION.txt ]; then
+          # Extract the last non-empty line from VERSION.txt
+          VERSION=$(grep -E '^[0-9]+\.[0-9]+\.[0-9]+' VERSION.txt | tail -n 1 | awk '{print $1}')
+          echo "VERSION=${VERSION:-$DEFAULT_VERSION}" >> $GITHUB_ENV
+        else
+          echo "VERSION=$DEFAULT_VERSION" >> $GITHUB_ENV
+        fi
+
       - name: Build and push Docker image
         env:
           CI_CUSTOM_IMAGE_NAME: ${{ github.ref == 'refs/heads/master' && 'kypo-adaptive-training-service' || 'kypo-adaptive-training-service-develop' }}
@@ -58,7 +75,7 @@ jobs:
           build-args: |
             PROPRIETARY_REPO_URL=${{ vars.PROPRIETARY_REPO_URL }}
           push: true
-          tags: ghcr.io/${{ github.repository }}/${{ env.CI_CUSTOM_IMAGE_NAME }}:${{ vars.VERSION }}
+          tags: ghcr.io/${{ github.repository }}/${{ env.CI_CUSTOM_IMAGE_NAME }}:${{ env.VERSION }}
 
   generate_docs:
     if: github.ref == 'refs/heads/master'
