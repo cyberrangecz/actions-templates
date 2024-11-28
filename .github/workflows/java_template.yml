@@ -27,6 +27,7 @@ jobs:
         run: |
           mvn clean install $MAVEN_CLI_OPTS -Dproprietary-repo-url=${{ vars.PROPRIETARY_REPO_URL }}
         env:
+          GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.ALL_REPOS_ACCESS_TOKEN }}
           PROPRIETARY_REPO_URL: ${{ vars.PROPRIETARY_REPO_URL }}
 
