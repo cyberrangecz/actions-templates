@@ -6,7 +6,16 @@ on:
       MAVEN_CLI_OPTS:
         type: string
         required: true
-        default: "-Dmaven.repo.local=${{ github.workspace }}/.m2/repository"
+        default: ""
+    secrets:
+      READ_PACKAGES:
+        required: true
+
+env:
+  GITHUB_WORKSPACE: ${{ github.workspace }}
+  GITHUB_ACTOR: ${{ github.actor }}
+  READ_PACKAGES_TOKEN: ${{ secrets.READ_PACKAGES }}
+  PROPRIETARY_REPO_URL: ${{ vars.PROPRIETARY_REPO_URL }}
 
 jobs:
   build_maven:
@@ -25,11 +34,7 @@ jobs:
 
       - name: Build with Maven
         run: |
-          mvn clean install $MAVEN_CLI_OPTS -Dproprietary-repo-url=${{ vars.PROPRIETARY_REPO_URL }}
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.ALL_REPOS_ACCESS_TOKEN }}
-          PROPRIETARY_REPO_URL: ${{ vars.PROPRIETARY_REPO_URL }}
+          mvn clean install ${{ inputs.MAVEN_CLI_OPTS }} -Dmaven.repo.local=$GITHUB_WORKSPACE/.m2/repository -Dproprietary-repo-url=${{ vars.PROPRIETARY_REPO_URL }}
 
   build_container:
     if: github.event_name != 'pull_request'
@@ -57,7 +62,11 @@ jobs:
           context: .  # Path to the Dockerfile
           file: ./Dockerfile
           build-args: |
+            PROJECT_ARTIFACT_ID=${{ github.event.repository.name }}
             PROPRIETARY_REPO_URL=${{ vars.PROPRIETARY_REPO_URL }}
+            GITHUB_ACTOR=${{ github.actor }}
+            READ_PACKAGES_TOKEN=${{ secrets.READ_PACKAGES }}
+            MAVEN_CLI_OPTS=${{ inputs.MAVEN_CLI_OPTS }}
           push: true
           tags: ghcr.io/${{ github.repository }}/${{ env.CI_CUSTOM_IMAGE_NAME }}:${{ vars.VERSION }}
 
@@ -78,7 +87,7 @@ jobs:
 
       - name: Generate and Push Swagger Docs
         run: |
-          mvn clean package $MAVEN_CLI_OPTS -DskipTests -Dswagger.skip=false -Dproprietary-repo-url=${{ vars.PROPRIETARY_REPO_URL }}
+          mvn clean package ${{ inputs.MAVEN_CLI_OPTS }} -DskipTests -Dswagger.skip=false -Dproprietary-repo-url=${{ vars.PROPRIETARY_REPO_URL }}
 
       - name: Upload Docs Artifact
         uses: actions/upload-artifact@v4
