@@ -56,7 +56,7 @@ jobs:
 
       - name: Build and push Docker image
         env:
-          CI_CUSTOM_IMAGE_NAME: ${{ github.ref == 'refs/heads/master' && 'kypo-adaptive-training-service' || 'kypo-adaptive-training-service-develop' }}
+          CI_CUSTOM_IMAGE_NAME: ${{ github.ref == 'refs/heads/master' && 'adaptive-training-service' || 'adaptive-training-service-develop' }}
         uses: docker/build-push-action@v6
         with:
           context: .  # Path to the Dockerfile
