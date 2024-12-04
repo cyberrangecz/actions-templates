@@ -68,6 +68,7 @@ jobs:
             READ_PACKAGES_TOKEN=${{ secrets.READ_PACKAGES }}
             MAVEN_CLI_OPTS=${{ inputs.MAVEN_CLI_OPTS }}
           push: true
+          no-cache: true
           tags: ghcr.io/${{ github.repository }}/${{ env.CI_CUSTOM_IMAGE_NAME }}:${{ vars.VERSION }}
 
   generate_docs:
