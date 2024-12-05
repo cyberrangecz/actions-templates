@@ -62,7 +62,6 @@ jobs:
           context: .  # Path to the Dockerfile
           file: ./Dockerfile
           build-args: |
-            PROJECT_NAME=${{ github.event.repository.name }}
             PROPRIETARY_REPO_URL=${{ vars.PROPRIETARY_REPO_URL }}
             GITHUB_ACTOR=${{ github.actor }}
             READ_PACKAGES_TOKEN=${{ secrets.READ_PACKAGES }}
