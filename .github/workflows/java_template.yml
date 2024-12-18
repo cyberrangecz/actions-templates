@@ -7,6 +7,10 @@ on:
         type: string
         required: true
         default: ""
+      IMAGE_NAME:
+        type: string
+        required: true
+        default: "image"
     secrets:
       READ_PACKAGES:
         required: true
@@ -56,7 +60,7 @@ jobs:
 
       - name: Build and push Docker image
         env:
-          CI_CUSTOM_IMAGE_NAME: ${{ github.ref == 'refs/heads/master' && 'adaptive-training-service' || 'adaptive-training-service-develop' }}
+          CI_CUSTOM_IMAGE_NAME: ${{ github.ref == 'refs/heads/master' && inputs.IMAGE_NAME || format('{0}-develop', inputs.IMAGE_NAME) }}
         uses: docker/build-push-action@v6
         with:
           context: .  # Path to the Dockerfile
