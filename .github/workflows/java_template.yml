@@ -60,7 +60,7 @@ jobs:
 
       - name: Build and push Docker image
         env:
-          CI_CUSTOM_IMAGE_NAME: ${{ github.ref == 'refs/heads/master' && inputs.IMAGE_NAME || format('{0}-develop', inputs.IMAGE_NAME) }}
+          CI_CUSTOM_IMAGE_NAME: ${{ github.ref == 'refs/heads/master' && format('{0}-service', inputs.IMAGE_NAME) || format('{0}-service-develop', inputs.IMAGE_NAME) }}
         uses: docker/build-push-action@v6
         with:
           context: .  # Path to the Dockerfile
