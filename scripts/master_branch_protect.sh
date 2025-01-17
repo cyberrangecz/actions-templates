@@ -12,6 +12,7 @@ PROTECTION_SETTINGS='{
     "required_approving_review_count": 1
   },
   "required_conversation_resolution": true,
+  "required_signatures": true,
   "restrictions": null
 }'
 

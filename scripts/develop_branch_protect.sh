@@ -9,6 +9,7 @@ PROTECTION_SETTINGS='{
   "required_status_checks": null,
   "enforce_admins": false,
   "required_pull_request_reviews": null,
+  "required_signatures": true,
   "restrictions": null
 }'
 
