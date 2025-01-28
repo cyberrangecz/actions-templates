@@ -12,7 +12,7 @@ on:
 jobs:
   tag_control:
     if: github.event.pull_request.base.ref == 'master'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
 
   push_tag:
     if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code
         uses: actions/checkout@v4

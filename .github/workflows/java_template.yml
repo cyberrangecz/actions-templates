@@ -24,7 +24,7 @@ env:
 jobs:
   build_maven:
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
 
   build_container:
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build_maven
     steps:
       - name: Checkout code
@@ -75,7 +75,7 @@ jobs:
 
   generate_docs:
     if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build_maven
     steps:
       - name: Check out code

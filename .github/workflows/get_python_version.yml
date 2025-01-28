@@ -1,0 +1,40 @@
+name: Extract python version
+
+on:
+  workflow_call:
+    inputs:
+      file_path:
+        description: "Path to the file containing the version"
+        required: true
+        type: string
+    outputs:
+        version:
+            description: "Current version"
+            value: ${{ jobs.get_version.outputs.version }}
+
+jobs:
+  get_version:
+    runs-on: ubuntu-24.04
+    outputs:
+        version: ${{ steps.extract.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: extract
+        run: |
+          # Extract the version using grep
+          VERSION=$(grep -oP '__version__\s*=\s*"\Kv[0-9]+\.[0-9]+\.[0-9]+' ${{ inputs.file_path }})
+          
+          # Fail if the version is not found
+          if [ -z "$VERSION" ]; then
+            echo "Error: Version not found in ${{ inputs.file_path }}"
+            exit 1
+          fi
+
+          echo "Extracted version: $VERSION"
+
+          # Set the output variable
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+ 
