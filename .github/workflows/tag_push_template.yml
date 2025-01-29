@@ -1,0 +1,25 @@
+name: Tag push template
+
+on:
+  workflow_call:
+    inputs:
+      VERSION:
+        description: "Application version"
+        type: string
+        required: true
+        default: "1.0.0"
+
+jobs:
+  push_tag:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Push the new tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git tag ${{ inputs.VERSION }}
+          git push origin ${{ inputs.VERSION }}
