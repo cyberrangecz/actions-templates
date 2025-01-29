@@ -48,4 +48,3 @@ jobs:
           fi
 
           echo "New tag $NEW_TAG is valid, higher than, and not equal to last tag $LAST_TAG."
-        continue-on-error: true 
