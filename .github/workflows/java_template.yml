@@ -96,5 +96,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-docs
-          path: doc-files/kypo-adaptive-training-swagger-open-api.yaml
+          path: doc-files/swagger-docs.yaml
           
