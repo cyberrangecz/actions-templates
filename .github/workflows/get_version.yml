@@ -1,4 +1,4 @@
-name: Extract python version
+name: Extract application version
 
 on:
   workflow_call:
