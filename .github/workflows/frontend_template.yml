@@ -1,0 +1,114 @@
+name: Java template
+
+on:
+  workflow_call:
+    inputs:
+      VERSION_PATH:
+        type: string
+        required: true
+        default: ""
+    secrets:
+      NPMJS_TOKEN:
+        required: true
+
+jobs:
+  get_current_version:
+    uses: cyberrangecz/actions-templates/.github/workflows/get_version.yml@master
+    with:
+      file_path: ${{ inputs.VERSION_PATH }}
+
+  codeStyle:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ vars.CONTAINER_IMAGE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.17.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --ignore-scripts
+
+      - name: Run Lint
+        run: npm run lint
+
+  build:
+    if: github.event_name != 'pull_request'
+    needs: codeStyle
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ vars.CONTAINER_IMAGE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.17.0'
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@crczp'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --ignore-scripts
+
+      - name: Run Build and Pack
+        run: npm run ci-build-and-pack
+
+      - name: Upload package as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-package
+          path: dist/
+          retention-days: 1
+          
+  publish_to_npmjs:
+    if: github.ref == 'refs/heads/develop' && github.event.inputs.confirm_action == 'yes'
+    runs-on: ubuntu-24.04
+    needs: [build, control_tag]
+    container:
+      image: ${{ vars.CONTAINER_IMAGE }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.17.0'
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@crczp'
+          cache: 'npm'
+
+      - name: Download built package
+        uses: actions/download-artifact@v4
+        with:
+          name: npm-package
+          path: dist
+
+      - name: Publish Package
+        run: npm run ci-publish-package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
+
+  # Controls if version consistent with semver and higner than last git tag.
+  control_tag:
+    if: github.event.pull_request.base.ref == 'develop' || github.ref == 'refs/heads/develop'
+    needs: get_current_version
+    uses: cyberrangecz/actions-templates/.github/workflows/tag_control_template.yml@master
+    with:
+      VERSION: ${{ needs.get_current_version.outputs.version }}
+
+  # Push tag only from manual workflow_dispatch with confirmed tag creation
+  push_tag:
+    needs: [get_current_version, control_tag, publish_to_npmjs]
+    uses: cyberrangecz/actions-templates/.github/workflows/tag_push_template.yml@master
+    with:
+      VERSION: ${{ needs.get_current_version.outputs.version }}
