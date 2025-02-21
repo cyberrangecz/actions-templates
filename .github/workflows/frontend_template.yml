@@ -10,6 +10,8 @@ on:
     secrets:
       NPMJS_TOKEN:
         required: true
+      SENTINEL_PULL:
+        required: true
 
 jobs:
   get_current_version:
@@ -30,6 +32,9 @@ jobs:
         with:
           node-version: '20.17.0'
           cache: 'npm'
+
+      - name: Copy .npmrc for authentication
+        run: echo "${{ secrets.SENTINEL_PULL }}" > ~/.npmrc
 
       - name: Install dependencies
         run: npm ci --prefer-offline --ignore-scripts
@@ -53,6 +58,9 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           scope: '@crczp'
           cache: 'npm'
+
+      - name: Copy .npmrc for authentication
+        run: echo "${{ secrets.SENTINEL_PULL }}" > ~/.npmrc
 
       - name: Install dependencies
         run: npm ci --prefer-offline --ignore-scripts
