@@ -34,7 +34,7 @@ jobs:
           cache: 'npm'
 
       - name: Copy .npmrc for authentication
-        run: echo "${{ secrets.SENTINEL_PULL }}" > ~/.npmrc
+        run: echo "${{ secrets.SENTINEL_PULL }}" >> .npmrc
 
       - name: Install dependencies
         run: npm ci --prefer-offline --ignore-scripts
@@ -60,7 +60,7 @@ jobs:
           cache: 'npm'
 
       - name: Copy .npmrc for authentication
-        run: echo "${{ secrets.SENTINEL_PULL }}" > ~/.npmrc
+        run: echo "${{ secrets.SENTINEL_PULL }}" >> .npmrc
 
       - name: Install dependencies
         run: npm ci --prefer-offline --ignore-scripts
