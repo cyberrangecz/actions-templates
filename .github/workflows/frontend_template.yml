@@ -1,4 +1,4 @@
-name: Java template
+name: Frontend template
 
 on:
   workflow_call:
@@ -7,6 +7,10 @@ on:
         type: string
         required: true
         default: ""
+      TEST:
+        type: boolean
+        required: true
+        default: false
     secrets:
       NPMJS_TOKEN:
         required: true
@@ -22,8 +26,6 @@ jobs:
   codeStyle:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.CONTAINER_IMAGE }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,12 +44,33 @@ jobs:
       - name: Run Lint
         run: npm run lint
 
+  unitTests:
+    if: ${{ inputs.TEST }}
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ vars.CONTAINER_IMAGE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.17.0'
+          cache: 'npm'
+
+      - name: Copy .npmrc for authentication
+        run: echo "${{ secrets.SENTINEL_PULL }}" >> .npmrc
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --ignore-scripts
+
+      - name: Run tests
+        run: npm run ci-test
+
   build:
     if: github.event_name != 'pull_request'
     needs: codeStyle
     runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.CONTAINER_IMAGE }}
     steps:
       - uses: actions/checkout@v4
 
@@ -79,8 +102,6 @@ jobs:
     if: ( github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master' ) && github.event.inputs.confirm_action == 'yes'
     runs-on: ubuntu-24.04
     needs: [build, control_tag]
-    container:
-      image: ${{ vars.CONTAINER_IMAGE }}
     permissions:
       contents: read
       id-token: write
