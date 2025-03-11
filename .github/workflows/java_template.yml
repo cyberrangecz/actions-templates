@@ -11,6 +11,10 @@ on:
         type: string
         required: true
         default: "image"
+      VERSION_PATH:
+        type: string
+        required: true
+        default: ""
     secrets:
       READ_PACKAGES:
         required: true
@@ -22,6 +26,11 @@ env:
   PROPRIETARY_REPO_URL: ${{ vars.PROPRIETARY_REPO_URL }}
 
 jobs:
+  get_current_version:
+    uses: cyberrangecz/actions-templates/.github/workflows/get_version.yml@master
+    with:
+      file_path: ${{ inputs.VERSION_PATH }}
+
   build_maven:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
@@ -43,7 +52,7 @@ jobs:
   build_container:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
-    needs: build_maven
+    needs: [build_maven, get_current_version]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -60,7 +69,8 @@ jobs:
 
       - name: Build and push Docker image
         env:
-          CI_CUSTOM_IMAGE_NAME: ${{ github.ref == 'refs/heads/master' && format('{0}-service', inputs.IMAGE_NAME) || format('{0}-service-develop', inputs.IMAGE_NAME) }}
+          IMAGE_NAME: ${{ inputs.IMAGE_NAME }}-service
+          IMAGE_TAG: ${{ github.ref == 'refs/heads/master' && format('{0}', needs.get_current_version.outputs.version ) || format('{0}-dev', needs.get_current_version.outputs.version) }}
         uses: docker/build-push-action@v6
         with:
           context: .  # Path to the Dockerfile
@@ -71,7 +81,7 @@ jobs:
             READ_PACKAGES_TOKEN=${{ secrets.READ_PACKAGES }}
             MAVEN_CLI_OPTS=${{ inputs.MAVEN_CLI_OPTS }}
           push: true
-          tags: ghcr.io/${{ github.repository }}/${{ env.CI_CUSTOM_IMAGE_NAME }}:${{ vars.VERSION }}
+          tags: ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
   generate_docs:
     if: github.ref == 'refs/heads/master'
@@ -98,3 +108,17 @@ jobs:
           name: ${{ github.event.repository.name }}-docs
           path: doc-files/swagger-docs.yaml
           
+  # Controls if version consistent with semver and higner than last git tag.
+  control_tag:
+    if: github.event.pull_request.base.ref == 'master' || github.ref == 'refs/heads/master'
+    needs: get_current_version
+    uses: cyberrangecz/actions-templates/.github/workflows/tag_control_template.yml@master
+    with:
+      VERSION: ${{ needs.get_current_version.outputs.version }}
+
+  # Push tag only from manual workflow_dispatch with confirmed tag creation
+  push_tag:
+    needs: [get_current_version, control_tag, build_container]
+    uses: cyberrangecz/actions-templates/.github/workflows/tag_push_template.yml@master
+    with:
+      VERSION: ${{ needs.get_current_version.outputs.version }}
