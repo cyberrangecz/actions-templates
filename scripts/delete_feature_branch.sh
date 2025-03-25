@@ -9,7 +9,21 @@ BRANCH_SETTINGS='{
 }'
 
 # Fetch all repositories in the organization
-repos=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/orgs/$ORG/repos?per_page=100" | jq -r '.[].name')
+page=1
+
+set -x
+while true; do
+    data=$(curl -s -H "Authorization: token $TOKEN" \
+        "https://api.github.com/orgs/$ORG/repos?per_page=100&page=$page" | jq -r '.[].name')
+
+    # Stop if no more repositories are found
+    [[ -z "$data" ]] && break
+
+    # Extract repository names
+    repos+="$data "
+
+    ((page++))
+done
 
 # Loop through each repository
 for repo in $repos; do
