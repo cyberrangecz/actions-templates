@@ -72,7 +72,7 @@ jobs:
           retention-days: 1  # GitHub only supports a minimum of 1 day
 
   publish_to_pypi:
-    if: github.ref == 'refs/heads/master' && ${{ inputs.publish_and_tag }} == 'yes'
+    if: ${{ github.ref == 'refs/heads/master' && inputs.publish_and_tag == 'yes' }}
     runs-on: ubuntu-24.04
     needs: [build, control_tag]
     steps:
@@ -107,7 +107,7 @@ jobs:
 
   # Push tag only from manual workflow_dispatch with confirmed tag creation
   push_tag:
-    if: github.ref == 'refs/heads/master' && ${{ inputs.publish_and_tag }} == 'yes'
+    if: ${{ github.ref == 'refs/heads/master' && inputs.publish_and_tag == 'yes' }}
     needs: [get_current_version, control_tag, publish_to_pypi]
     uses: cyberrangecz/actions-templates/.github/workflows/tag_push_template.yml@master
     with:
