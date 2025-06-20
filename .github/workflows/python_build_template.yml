@@ -41,7 +41,7 @@ jobs:
           tox
 
   build:
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && inputs.publish_and_tag == 'yes'
     runs-on: ubuntu-24.04
     needs: [get_current_version, codeQuality]
     env:
