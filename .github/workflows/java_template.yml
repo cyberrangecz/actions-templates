@@ -102,11 +102,26 @@ jobs:
         run: |
           mvn clean package ${{ inputs.MAVEN_CLI_OPTS }} -DskipTests -Dswagger.skip=false -Dproprietary-repo-url=${{ vars.PROPRIETARY_REPO_URL }}
 
-      - name: Upload Docs Artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload Docs files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: ${{ github.event.repository.name }}-docs
-          path: doc-files/swagger-docs.yaml
+          path: doc-files/
+
+  upload_docs:
+    needs: generate_docs
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
           
   # Controls if version consistent with semver and higner than last git tag.
   control_tag:
