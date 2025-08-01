@@ -15,14 +15,9 @@ on:
         type: string
         required: true
         default: ""
-    secrets:
-      READ_PACKAGES:
-        required: true
 
 env:
   GITHUB_WORKSPACE: ${{ github.workspace }}
-  GITHUB_ACTOR: ${{ github.actor }}
-  READ_PACKAGES_TOKEN: ${{ secrets.READ_PACKAGES }}
   PROPRIETARY_REPO_URL: ${{ vars.PROPRIETARY_REPO_URL }}
 
 jobs:
@@ -77,8 +72,6 @@ jobs:
           file: ./Dockerfile
           build-args: |
             PROPRIETARY_REPO_URL=${{ vars.PROPRIETARY_REPO_URL }}
-            GITHUB_ACTOR=${{ github.actor }}
-            READ_PACKAGES_TOKEN=${{ secrets.READ_PACKAGES }}
             MAVEN_CLI_OPTS=${{ inputs.MAVEN_CLI_OPTS }}
           push: true
           tags: ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
