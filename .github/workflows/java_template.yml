@@ -26,7 +26,7 @@ jobs:
     with:
       file_path: ${{ inputs.VERSION_PATH }}
 
-  build_maven:
+  code_quality:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     steps:
@@ -42,12 +42,12 @@ jobs:
 
       - name: Build with Maven
         run: |
-          mvn clean install ${{ inputs.MAVEN_CLI_OPTS }} -Dmaven.repo.local=$GITHUB_WORKSPACE/.m2/repository -Dproprietary-repo-url=${{ vars.PROPRIETARY_REPO_URL }}
+          mvn clean install ${{ inputs.MAVEN_CLI_OPTS }} -Dmaven.repo.local=$GITHUB_WORKSPACE/.m2/repository
 
   build_container:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
-    needs: [build_maven, get_current_version]
+    needs: [code_quality, get_current_version]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -79,7 +79,7 @@ jobs:
   generate_docs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-24.04
-    needs: build_maven
+    needs: code_quality
     steps:
       - name: Check out code
         uses: actions/checkout@v4
