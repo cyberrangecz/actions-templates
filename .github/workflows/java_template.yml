@@ -15,6 +15,9 @@ on:
         type: string
         required: true
         default: ""
+    secrets:
+      NVD_API:
+        required: true
 
 env:
   GITHUB_WORKSPACE: ${{ github.workspace }}
