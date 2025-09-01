@@ -21,7 +21,6 @@ on:
 
 env:
   GITHUB_WORKSPACE: ${{ github.workspace }}
-  PROPRIETARY_REPO_URL: ${{ vars.PROPRIETARY_REPO_URL }}
   NVD_API_TOKEN: ${{ secrets.NVD_API }}
 
 jobs:
@@ -75,7 +74,6 @@ jobs:
           context: .  # Path to the Dockerfile
           file: ./Dockerfile
           build-args: |
-            PROPRIETARY_REPO_URL=${{ vars.PROPRIETARY_REPO_URL }}
             MAVEN_CLI_OPTS=${{ inputs.MAVEN_CLI_OPTS }}
           push: true
           tags: ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
@@ -97,7 +95,7 @@ jobs:
 
       - name: Generate and Push Swagger Docs
         run: |
-          mvn clean package ${{ inputs.MAVEN_CLI_OPTS }} -DskipTests -Dswagger.skip=false -Dproprietary-repo-url=${{ vars.PROPRIETARY_REPO_URL }}
+          mvn clean package ${{ inputs.MAVEN_CLI_OPTS }} -DskipTests -Dswagger.skip=false
 
       - name: Upload Docs files as artifact
         id: deployment
