@@ -45,7 +45,7 @@ jobs:
 
       - name: Build with Maven
         run: |
-          mvn clean install ${{ inputs.MAVEN_CLI_OPTS }} -Dmaven.repo.local=$GITHUB_WORKSPACE/.m2/repository
+          mvn -ntp clean install ${{ inputs.MAVEN_CLI_OPTS }} -Dmaven.repo.local=$GITHUB_WORKSPACE/.m2/repository
 
   build_container:
     if: github.event_name != 'pull_request'
