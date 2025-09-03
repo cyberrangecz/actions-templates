@@ -15,6 +15,10 @@ on:
         type: string
         required: true
         default: ""
+      JAVA_VERSION:
+        type: string
+        required: true
+        default: "17"
     secrets:
       NVD_API:
         required: true
@@ -39,7 +43,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: ${{ inputs.JAVA_VERSION }}
           distribution: 'adopt'
           cache: 'maven'
 
@@ -89,7 +93,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: ${{ inputs.JAVA_VERSION }}
           distribution: 'adopt'
           cache: 'maven'
 
