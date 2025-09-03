@@ -17,7 +17,7 @@ on:
         default: ""
       JAVA_VERSION:
         type: string
-        required: true
+        required: false
         default: "17"
     secrets:
       NVD_API:
