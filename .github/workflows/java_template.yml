@@ -99,7 +99,7 @@ jobs:
 
       - name: Generate and Push Swagger Docs
         run: |
-          mvn clean package ${{ inputs.MAVEN_CLI_OPTS }} -DskipTests -Dswagger.skip=false
+          mvn -ntp clean package ${{ inputs.MAVEN_CLI_OPTS }} -DskipTests -DskipChecks=true -Dswagger.skip=false
 
       - name: Upload Docs files as artifact
         id: deployment
