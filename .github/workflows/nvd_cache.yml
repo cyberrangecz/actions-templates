@@ -22,17 +22,17 @@ jobs:
       - name: Download Dependency-Check CLI
         run: |
           curl -Ls "https://github.com/dependency-check/DependencyCheck/releases/download/v$VERSION/dependency-check-$VERSION-release.zip" --output dependency-check.zip
-          unzip dependency-check.zip -d dc
+          unzip dependency-check.zip
 
       - name: Build NVD Database
         env:
           NVD_API_KEY: ${{ secrets.NVD_API }}
         run: |
-          ./dc/bin/dependency-check.sh --updateonly --nvdApiKey $NVD_API_KEY
+          ./dependency-check/bin/dependency-check.sh --updateonly --nvdApiKey $NVD_API_KEY
 
       - name: Upload NVD Cache as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: nvd-cache-${{ steps.date.outputs.date_key }}
-          path: ./dc/data
+          path: ./dependency-check/data
           retention-days: 3
