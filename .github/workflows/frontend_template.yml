@@ -118,7 +118,7 @@ jobs:
 
   # Push tag only from manual workflow_dispatch with confirmed tag creation
   push_tag:
-    needs: [get_current_version, control_tag, publish_to_npmjs]
+    needs: [get_current_version, control_tag, build_container]
     uses: cyberrangecz/actions-templates/.github/workflows/tag_push_template.yml@master
     with:
       VERSION: ${{ needs.get_current_version.outputs.version }}
