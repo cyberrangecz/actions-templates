@@ -75,7 +75,7 @@ jobs:
   build_container:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
-    needs: [codeStyle, unitTests, get_current_version]
+    needs: [codeStyle, get_current_version] # add unitTests when created
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
