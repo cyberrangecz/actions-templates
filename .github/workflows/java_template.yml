@@ -3,6 +3,10 @@ name: Java template
 on:
   workflow_call:
     inputs:
+      publish_and_tag:
+        description: "Publish and create a new tag or not"
+        required: true
+        type: string
       MAVEN_CLI_OPTS:
         type: string
         required: true
@@ -148,6 +152,7 @@ jobs:
 
   # Push tag only from manual workflow_dispatch with confirmed tag creation
   push_tag:
+    if: ${{ github.ref == 'refs/heads/master' && inputs.publish_and_tag == 'yes' }}
     needs: [get_current_version, control_tag, build_container]
     uses: cyberrangecz/actions-templates/.github/workflows/tag_push_template.yml@master
     with:
