@@ -54,7 +54,7 @@ jobs:
 
       - name: Run tox (${{ matrix.env }})
         run: |
-          tox -q -e ${{ matrix.env }}
+          tox -vvv -e ${{ matrix.env }}
 
   build:
     if: github.event_name != 'pull_request'
