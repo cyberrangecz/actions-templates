@@ -63,7 +63,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.m2/repository/org/owasp/dependency-check-data
-          key: check-nvd-stable
+          key: check-nvd-stable-${{ github.run_id }}
           restore-keys: |
             check-nvd-stable
 
