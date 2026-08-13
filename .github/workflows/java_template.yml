@@ -23,6 +23,11 @@ on:
         type: string
         required: false
         default: "17"
+      skip_docs:
+        description: "Skip generating and publishing static Swagger docs to GitHub Pages (e.g. for repos serving docs at runtime instead)"
+        type: boolean
+        required: false
+        default: false
     secrets:
       NVD_API:
         required: true
@@ -103,7 +108,7 @@ jobs:
           tags: ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
   generate_docs:
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' && inputs.skip_docs != true
     runs-on: ubuntu-24.04
     needs: code_quality
     steps:
