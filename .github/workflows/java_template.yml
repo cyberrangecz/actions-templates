@@ -22,12 +22,17 @@ on:
       JAVA_VERSION:
         type: string
         required: false
-        default: "17"
+        default: "25"
       skip_docs:
         description: "Skip generating and publishing static Swagger docs to GitHub Pages (e.g. for repos serving docs at runtime instead)"
         type: boolean
         required: false
         default: false
+      FAIL_BUILD_ON_CVSS:
+        description: "CVSS score at or above which OWASP Dependency-Check fails the build (11 = never fail)"
+        type: string
+        required: false
+        default: "9"
     secrets:
       NVD_API:
         required: true
@@ -39,6 +44,7 @@ on:
 env:
   GITHUB_WORKSPACE: ${{ github.workspace }}
   NVD_API_TOKEN: ${{ secrets.NVD_API }}
+  FAIL_BUILD_ON_CVSS: ${{ inputs.FAIL_BUILD_ON_CVSS }}
   OSS_INDEX_USER: ${{ secrets.OSS_INDEX_USER }}
   OSS_INDEX_TOKEN: ${{ secrets.OSS_INDEX_TOKEN }}
 
