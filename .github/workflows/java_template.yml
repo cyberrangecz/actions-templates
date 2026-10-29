@@ -33,6 +33,11 @@ on:
         type: string
         required: false
         default: "9"
+      NVD_DB_TAG:
+        description: "Tag of ghcr.io/cyberrangecz/nvd-db to restore, must match the dependency-check major version in pom.xml"
+        type: string
+        required: false
+        default: "13"
     secrets:
       NVD_API:
         required: true
@@ -57,8 +62,9 @@ jobs:
   code_quality:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     env:
-      NVD_DATA_DIR: ${{ github.workspace }}/.m2/repository/org/owasp/dependency-check-data
+      NVD_DATA_DIR: ${{ github.workspace }}/.nvd-data
     steps:
       - name: Check out code
         uses: actions/checkout@v7
@@ -70,17 +76,22 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Cache NVD
-        uses: actions/cache@v6
-        with:
-          path: ${{ github.workspace }}/.m2/repository/org/owasp/dependency-check-data
-          key: check-nvd-stable-${{ github.run_id }}
-          restore-keys: |
-            check-nvd-stable
+      - name: Restore NVD snapshot
+        env:
+          NVD_DB_IMAGE: ghcr.io/cyberrangecz/nvd-db:${{ inputs.NVD_DB_TAG }}
+        run: |
+          mkdir -p "$NVD_DATA_DIR"
+          if docker create --name nvd "$NVD_DB_IMAGE" noop; then
+            docker cp nvd:/data/. "$NVD_DATA_DIR"
+            docker rm nvd
+          else
+            echo "::warning::No NVD snapshot found ($NVD_DB_IMAGE), falling back to full download"
+          fi
 
       - name: Build with Maven
+        timeout-minutes: 25
         run: |
-          mvn -ntp clean install ${{ inputs.MAVEN_CLI_OPTS }} -s .github/workflows/settings.xml -Dmaven.repo.local=$GITHUB_WORKSPACE/.m2/repository
+          mvn -ntp clean install ${{ inputs.MAVEN_CLI_OPTS }} -s .github/workflows/settings.xml
 
   build_container:
     if: github.event_name != 'pull_request'
