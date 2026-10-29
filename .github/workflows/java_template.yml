@@ -67,7 +67,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           java-version: ${{ inputs.JAVA_VERSION }}
-          distribution: 'adopt'
+          distribution: 'temurin'
           cache: 'maven'
 
       - name: Cache NVD
@@ -125,7 +125,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           java-version: ${{ inputs.JAVA_VERSION }}
-          distribution: 'adopt'
+          distribution: 'temurin'
           cache: 'maven'
 
       - name: Generate and Push Swagger Docs
