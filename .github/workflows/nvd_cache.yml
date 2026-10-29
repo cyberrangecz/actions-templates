@@ -1,35 +1,66 @@
-# not used for now, kept for reference
-# local cache used instead at java_template.yml
+# Builds the OWASP Dependency-Check data (NVD, RetireJS, CISA KEV, hosted suppressions)
+# and publishes it as ghcr.io/cyberrangecz/nvd-db:<dependency-check major version>.
+# Java builds restore this snapshot and only fetch changes made since it was built.
 
-name: Build & Publish NVD Cache
+name: Build NVD snapshot
 
 on:
+  schedule:
+    # Monday and Thursday, 03:17 UTC
+    - cron: "17 3 * * 1,4"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 env:
-  VERSION: "12.1.3"
+  DC_VERSION: "13.0.0"
+  IMAGE: ghcr.io/cyberrangecz/nvd-db
 
 jobs:
-  build-nvd-cache:
+  build:
     runs-on: ubuntu-24.04
+    # First run downloads the whole NVD (2h+), later runs only fetch changes since the previous run
+    timeout-minutes: 300
+    concurrency: nvd-db
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore previous snapshot
+        run: |
+          mkdir -p data
+          if docker create --name prev "$IMAGE:${DC_VERSION%%.*}" noop; then
+            docker cp prev:/data/. data/
+            docker rm prev
+          else
+            echo "::warning::No previous snapshot, doing full NVD download"
+          fi
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
 
       - name: Download Dependency-Check CLI
         run: |
-          curl -Ls "https://github.com/dependency-check/DependencyCheck/releases/download/v$VERSION/dependency-check-$VERSION-release.zip" --output dependency-check.zip
-          unzip dependency-check.zip
+          curl -fsSL "https://github.com/dependency-check/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip" -o dependency-check.zip
+          unzip -q dependency-check.zip
 
-      - name: Build NVD Database
+      - name: Update NVD database
         env:
           NVD_API_KEY: ${{ secrets.NVD_API }}
         run: |
-          ./dependency-check/bin/dependency-check.sh --updateonly --nvdApiKey $NVD_API_KEY
+          ./dependency-check/bin/dependency-check.sh --updateonly --data "$PWD/data" --nvdApiKey "$NVD_API_KEY"
 
-      - name: Upload NVD Cache as Artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: nvd-cache-latest
-          path: ./dependency-check/data
-          retention-days: 2
+      - name: Push snapshot
+        run: |
+          printf 'FROM scratch\nLABEL org.opencontainers.image.source=https://github.com/%s\nCOPY . /data/\n' "$GITHUB_REPOSITORY" \
+            | docker build -t "$IMAGE:${DC_VERSION%%.*}" -f - data
+          docker push "$IMAGE:${DC_VERSION%%.*}"
