@@ -90,8 +90,11 @@ jobs:
 
       - name: Build with Maven
         timeout-minutes: 25
+        env:
+          # Shared suppressions, ignored by repos whose pom.xml sets <suppressionFile> itself
+          DC_SUPPRESSION_FILE: https://raw.githubusercontent.com/cyberrangecz/actions-templates/master/dependency-check/suppressions.xml
         run: |
-          mvn -ntp clean install ${{ inputs.MAVEN_CLI_OPTS }} -s .github/workflows/settings.xml
+          mvn -ntp clean install ${{ inputs.MAVEN_CLI_OPTS }} -s .github/workflows/settings.xml -DsuppressionFile="$DC_SUPPRESSION_FILE"
 
   build_container:
     if: github.event_name != 'pull_request'
