@@ -34,9 +34,10 @@ outputs:
 runs:
   using: composite
   steps:
-    # A plain vX.Y.Z is a release, pushed once, so it deploys by its tag. Every other tag
-    # (-dev, -staging) is pushed again for the same version, so it is pinned to the digest
-    # of this build: approving an older run still deploys that run's image.
+    # A plain vX.Y.Z deploys by its tag. Master runs re-push it until the version is bumped,
+    # so the deploy gets whatever the tag holds now, and a second run at the same version
+    # changes nothing; accepted for releases. Every other tag (-dev, -staging) is pinned to
+    # the digest of this build: approving an older run still deploys that run's image.
     - name: Prepare the request
       id: request
       shell: bash
@@ -44,7 +45,12 @@ runs:
         TAG: ${{ inputs.tag }}
         DIGEST: ${{ inputs.digest }}
         REPOSITORY: ${{ inputs.repository }}
+        HAS_CREDENTIALS: ${{ inputs.client-id != '' && inputs.private-key != '' }}
       run: |
+        if [[ "$HAS_CREDENTIALS" != true ]]; then
+          echo "::error title=Deploy to stage::No App client ID or private key. A caller of a reusable template must pass DEPLOY_APP_PRIVATE_KEY by name, and DEPLOY_APP_CLIENT_ID must be set as a variable"
+          exit 1
+        fi
         if [[ "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
           image="$TAG"
         elif [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]; then

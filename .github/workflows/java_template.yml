@@ -51,7 +51,7 @@ on:
       OSS_INDEX_TOKEN:
         required: true
       DEPLOY_APP_PRIVATE_KEY:
-        description: "Not passed by callers: deploy_stage reads it from the calling repo's stage environment"
+        description: "Needed with DEPLOY_COMPONENT. Pass it by name (secrets.DEPLOY_APP_PRIVATE_KEY) although it exists only in the stage environment; deploy_stage then gets the environment's value"
         required: false
 
 env:
@@ -151,6 +151,8 @@ jobs:
   # Manual deploy-to-stage button: waits for a reviewer to approve the stage environment,
   # then sends this build to tf-crczp-kubernetes. The App credentials are the stage
   # environment's DEPLOY_APP_CLIENT_ID variable and DEPLOY_APP_PRIVATE_KEY secret.
+  # The caller must pass the secret by name: an environment secret it doesn't pass is an
+  # empty string in a reusable workflow.
   deploy_stage:
     if: inputs.DEPLOY_COMPONENT != ''
     needs: build_container
