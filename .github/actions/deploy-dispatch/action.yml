@@ -1,0 +1,96 @@
+name: Deploy to stage
+description: >-
+  Asks the deploy repository (cybersecurityhubcz/tf-crczp-kubernetes) to deploy one image,
+  or the head chart, to stage by sending it a deploy-stage repository_dispatch. A release
+  (vX.Y.Z) is sent as its tag; any other tag is pinned to the digest of this build.
+
+inputs:
+  component:
+    description: "What to deploy: a head subchart (answers-storage, frontend, guacamole-service, mitre, sandbox, training, user-and-group) or head"
+    required: true
+  tag:
+    description: "Tag the build pushed, e.g. v3.1.0 or v3.1.1-dev; for head, the chart version"
+    required: true
+  digest:
+    description: "Digest of the pushed image (sha256:...); needed for any tag that is not a plain vX.Y.Z"
+    required: false
+    default: ""
+  client-id:
+    description: "Client ID of the GitHub App installed on the deploy repository"
+    required: true
+  private-key:
+    description: "Private key of that GitHub App"
+    required: true
+  repository:
+    description: "Deploy repository, as owner/name"
+    required: false
+    default: cybersecurityhubcz/tf-crczp-kubernetes
+
+outputs:
+  image:
+    description: "The value sent: the tag, or tag@digest"
+    value: ${{ steps.request.outputs.image }}
+
+runs:
+  using: composite
+  steps:
+    # A plain vX.Y.Z deploys by its tag. Master runs re-push it until the version is bumped,
+    # so the deploy gets whatever the tag holds now, and a second run at the same version
+    # changes nothing; accepted for releases. Every other tag (-dev, -staging) is pinned to
+    # the digest of this build: approving an older run still deploys that run's image.
+    - name: Prepare the request
+      id: request
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        DIGEST: ${{ inputs.digest }}
+        REPOSITORY: ${{ inputs.repository }}
+        HAS_CREDENTIALS: ${{ inputs.client-id != '' && inputs.private-key != '' }}
+      run: |
+        if [[ "$HAS_CREDENTIALS" != true ]]; then
+          echo "::error title=Deploy to stage::No App client ID or private key. A caller of a reusable template must pass DEPLOY_APP_PRIVATE_KEY by name, and DEPLOY_APP_CLIENT_ID must be set as a variable"
+          exit 1
+        fi
+        if [[ "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          image="$TAG"
+        elif [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+          image="${TAG}@${DIGEST}"
+        else
+          echo "::error title=Deploy to stage::${TAG} is not a release (vX.Y.Z), so it needs the image digest; got '${DIGEST}'"
+          exit 1
+        fi
+        {
+          echo "image=$image"
+          echo "owner=${REPOSITORY%%/*}"
+          echo "name=${REPOSITORY#*/}"
+        } >> "$GITHUB_OUTPUT"
+
+    # Contents: write is the only permission a repository_dispatch needs. Asking for just
+    # that caps the token even if the App is later given more.
+    - name: Get a token for the deploy repository
+      id: token
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ inputs.client-id }}
+        private-key: ${{ inputs.private-key }}
+        owner: ${{ steps.request.outputs.owner }}
+        repositories: ${{ steps.request.outputs.name }}
+        permission-contents: write
+
+    # The deploy commit records where the image came from; its ref is kept to the
+    # characters the deploy workflow accepts.
+    - name: Send the deploy request
+      shell: bash
+      env:
+        GH_TOKEN: ${{ steps.token.outputs.token }}
+        REPOSITORY: ${{ inputs.repository }}
+        COMPONENT: ${{ inputs.component }}
+        IMAGE: ${{ steps.request.outputs.image }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        ref=$(printf '%s %s' "$GITHUB_REF_TYPE" "$GITHUB_REF_NAME" | tr -c 'A-Za-z0-9._/ -' '_')
+        jq -n --arg c "$COMPONENT" --arg i "$IMAGE" --arg r "$ref" --arg u "$RUN_URL" \
+          '{event_type: "deploy-stage", client_payload: {component: $c, image: $i, ref: $r, run_url: $u}}' \
+          | gh api "repos/${REPOSITORY}/dispatches" --input -
+        echo "::notice title=Deploy to stage::Sent ${COMPONENT} ${IMAGE} to ${REPOSITORY}"
+        echo "Sent **${COMPONENT}** \`${IMAGE}\` to stage: [deploy runs](${GITHUB_SERVER_URL}/${REPOSITORY}/actions/workflows/deploy-stage.yml)" >> "$GITHUB_STEP_SUMMARY"

@@ -38,6 +38,11 @@ on:
         type: string
         required: false
         default: "13"
+      DEPLOY_COMPONENT:
+        description: "This service's subchart in the head chart (e.g. training). Set, it adds a manual deploy-to-stage button after the image build; needs a stage environment in the calling repo"
+        type: string
+        required: false
+        default: ""
     secrets:
       NVD_API:
         required: true
@@ -45,6 +50,9 @@ on:
         required: true
       OSS_INDEX_TOKEN:
         required: true
+      DEPLOY_APP_PRIVATE_KEY:
+        description: "Needed with DEPLOY_COMPONENT. Pass it by name (secrets.DEPLOY_APP_PRIVATE_KEY) although it exists only in the stage environment; deploy_stage then gets the environment's value"
+        required: false
 
 env:
   GITHUB_WORKSPACE: ${{ github.workspace }}
@@ -100,6 +108,9 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     needs: [code_quality, get_current_version]
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      digest: ${{ steps.push.outputs.digest }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -114,10 +125,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # master builds the release tag, every other branch the -dev tag
+      - name: Set image tag
+        id: tag
+        env:
+          VERSION: ${{ needs.get_current_version.outputs.version }}
+        run: |
+          if [ "$GITHUB_REF" = refs/heads/master ]; then tag="$VERSION"; else tag="${VERSION}-dev"; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
       - name: Build and push Docker image
+        id: push
         env:
           IMAGE_NAME: ${{ inputs.IMAGE_NAME }}-service
-          IMAGE_TAG: ${{ github.ref == 'refs/heads/master' && format('{0}', needs.get_current_version.outputs.version ) || format('{0}-dev', needs.get_current_version.outputs.version) }}
+          IMAGE_TAG: ${{ steps.tag.outputs.tag }}
         uses: docker/build-push-action@v7
         with:
           context: .  # Path to the Dockerfile
@@ -126,6 +147,27 @@ jobs:
             MAVEN_CLI_OPTS=${{ inputs.MAVEN_CLI_OPTS }}
           push: true
           tags: ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+  # Manual deploy-to-stage button: waits for a reviewer to approve the stage environment,
+  # then sends this build to tf-crczp-kubernetes. The App credentials are the stage
+  # environment's DEPLOY_APP_CLIENT_ID variable and DEPLOY_APP_PRIVATE_KEY secret.
+  # The caller must pass the secret by name: an environment secret it doesn't pass is an
+  # empty string in a reusable workflow.
+  deploy_stage:
+    if: inputs.DEPLOY_COMPONENT != ''
+    needs: build_container
+    runs-on: ubuntu-24.04
+    permissions: {}
+    environment: stage
+    steps:
+      - name: Deploy to stage
+        uses: cyberrangecz/actions-templates/.github/actions/deploy-dispatch@master
+        with:
+          component: ${{ inputs.DEPLOY_COMPONENT }}
+          tag: ${{ needs.build_container.outputs.tag }}
+          digest: ${{ needs.build_container.outputs.digest }}
+          client-id: ${{ vars.DEPLOY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.DEPLOY_APP_PRIVATE_KEY }}
 
   generate_docs:
     if: github.ref == 'refs/heads/master' && inputs.skip_docs != true
